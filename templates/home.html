@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+<meta charset="utf-8">
+<title>Crypto Trader API in Python</title>
+</head>
+<body>
+<h1> Crypto Trader API in Python </h1>
+<h1> Overview </h1>
+<p>Crypto Trader API is an example project which demonstrates my knowledge from python.
+<br>Project has been written in Python using Flask.
+<br>Project uses SQLite database for persisting data.
+<br>Project has more than 24 python files and more than 40 unit tests methods.
+</p>
+
+<h1>  Requirements</h1>
+<p>
+•	Python 3.8<br>
+•	Works on Mac OSX, Linux, Windows.<br><br> </p>
+
+<h1>  Development environment</h1>
+<p>
+•	Pycharm Professional<br>
+•	Postman 2<br><br> </p>
+
+<h1> APIs and Documentation</h1>
+<h2> ADD crypto exchange</h2>
+<p>
+<b>POST /api/v1/crypto/exchanges</b><br>
+Example:<br> {"name": "exchange_name", "currency": "USD"}<br><br>
+
+Request is validated by:<br>
+CRYPTO_EXCHANGE_SCHEMA = Schema({"name": And(str, lambda s: 0 < len(s) <= 250),
+ "currency": And(str, lambda s: len(s) == 3)})<br><br>
+
+if validation is OK, will be generated exchange id and saved to db.<br>
+Response:
+{"amount": 0.0, "currency": "USD", "exchange_id": 436583595, "name": "exchange_name"}<br><br>
+For this API has been written 10 unit tests.<br><br>
+
+<b>FOR TESTING PURPOSES</b><br>
+    <b>GET /api/v1/crypto/exchanges</b> – return json representation all exchanges<br>
+
+</p>
+<h2> Deposit exchange </h2>
+<b>POST /api/v1/crypto/exchanges/{exchange_id}</b><br>
+Example: <br>{"amount": 1000, "currency": "USD"}<br><br>
+<b>Preconditions:</b><br>
+Valid exchange_id – has to be number<br>
+Request is validated by:
+ADD_DEPOSIT_SCHEMA = Schema({"amount": Or(float, int, lambda s: s < 1000000),
+"currency": And(str, lambda s: len(s) == 3)})<br><br>
+If amount is another currency will be recalculated to exchange currency by thirty web service.
+if validation is OK, will be updated exchange and saved to db.<br>
+Response:<br>
+{"success": True, "code": 200, "ContentType": "application/json"}<br><br>
+For this API has been written 10 unit tests.<br>
+
+<b>FOR TESTING PURPOSES</b><br>
+<b>GET /api/v1/crypto/exchanges/{exchange_id}</b> – return json representation exchange with given exchange id<br>
+
+<h2> Update crypto currencies within exchange</h2>
+<b>PUT /api/v1/crypto/exchanges/{exchange_id}/currencies</b><br>
+Example: <br>
+{"action": "ADD", "name": "Bitcoin", "shortcut": "BTC", "amount": 5}<br>
+{"action": "UPDATE", "name": "Bitcoin", "shortcut": "BTC", "amount": 5, "currency_id": 123}<br>
+{"action": "REMOVE", "name": "Bitcoin", "shortcut": "BTC", "currency_id": 123}<br><br>
+<b>Preconditions:</b><br>
+Valid exchange_id – has to be number<br>
+Request is validated by:<br>
+CRYPTO_CURRENCY_SCHEMA = Schema({
+"action": Or("ADD", "UPDATE", "REMOVE"),
+"name": And(str, lambda s: 0 < len(s) <= 250),
+"shortcut": And(str, lambda s: len(s) == 3),
+Optional("amount"): And(Or(float, int), lambda s: s < 1000000),
+Optional("currency_id"): int
+})<br><br>
+if validation is OK, will be created crypto exchange and saved to db.<br>
+Response:<br>
+[{"amount": 0.0, "currency_id": 1733229929, "exchange_id": 2015236545, "name": "Bitcoin", "shortcut": "BTC"}]<br><br>
+For this API has been written 9 unit tests.<br>
+
+<b>FOR TESTING PURPOSES</b><br>
+<b>GET /api/v1/crypto/exchanges/{exchange_id}/currencies</b> – return json representation crypto currencies with given exchange id<br>
+
+<h2>Create trade</h2>
+<b>POST /api/v1/crypto/exchanges/{exchange_id}/trades</b><br>
+Example: <br>
+{"amount": 10, "currency_in": "BTC", "currency_out": "USD"}
+{"amount": 10, "currency_in": "BTC", "currency_out": "USD"}<br><br>
+<b>Preconditions:</b><br>
+Valid exchange_id – has to be number<br>
+Request is validated by:
+TRADE_SCHEMA = Schema({
+"amount": And(Or(float, int), lambda s: s < 1000000),
+"currency_in": And(str, len, lambda s: len(s) == 3),
+"currency_out": And(str, lambda s: len(s) == 3),
+})<br><br>
+if trade is to crypto currency than trade.amount <= exchange.amount<br>
+if trade is from crypto currency than trade.amount <= crypto currency.amount<br>
+
+if validation is OK, will be updated exchange, crypto currency and trade and all will be saved to db.<br>
+Response:<br>
+{"crypto_currency_amount": 110.0, "exchange_amount": 900.0, "previous_crypto_currency_amount": 10, "previous_exchange_amount": 1000.0}<br><br>
+For this API has been written 9 unit tests.<br>
+
+<b>FOR TESTING PURPOSES</b><br>
+<b>GET /api/v1/crypto/exchanges/{exchange_id}/trades</b> – return json representation trades with given exchange id<br>
+
+<h2>History of trades</h2>
+<b>GET /api/v1/crypto/history?offset={offset}&limit={limit}&exchange_id={exchange_id}
+&search={search}&date_from={date_from}&date_to={date_to}</b><br>
+<br>
+date_from: (String) - “2019-10-23T12:12:12Z”<br>
+date_to: (String) - “2019-10-23T12:12:12Z”<br>
+exchange_id: (Integer)<br>
+search: (String)<br>
+offset: (Integer)<br>
+limit: (Integer)<br><br>
+Response:<br>
+[{"amount": 100, "amount_out": 100.0, "created": "2020-01-14T22:05:47Z", "currency_in": "USD", "currency_out": "BTC", "exchange_id": 338851043}]<br><br>
+
+For this API has been written 3 unit tests.
+
+<br><br><b>FOR TESTING PURPOSES</b><br>
+<h2> Mock test data </h2>
+<b>POST /api/v1/crypto/exchanges/test</b><br>
+Add 2 exchanges, for every exchange add deposit and crypto currencies and make trade<br><br>
+
+<b>FOR TESTING PURPOSES</b><br>
+<b>GET /api/v1/crypto/exchanges/test</b> – return json representation all persisted data, and exceptions log<br><br>
+
+<h2> Remove db data</h2>
+<b>GET /api/v1/crypto/exchanges/test_remove_data</b> - Remove all tables from db:<br><br>
+
+<h2> Documentation</h2>
+<b>GET /</b> - This documentation<br><br>
+<b>GET /api/v1/crypto/exchanges/</b> - This documentation<br><br>
+
+<h1>Some important files:</h1><br>
+<b>app.py</b> - main flask application<br><br>
+<b>CryptoExchangeAPI</b> - base logic for exchanges and crypto currencies<br>
+<b>TradesAPI</b> - base logic for trades<br>
+<b>SqlLiteDbHelper - crypto exchanges db(exchanges, crypto currencies, trades tables)</b><br>
+<b>CurrencyExchangeRateDownloader</b> - convert currencies via thirty-party apis<br>
+<b>DebugHelper</b> - prints data to json format - for debugging<br>
+<b>ExternalServers</b> - list of external api services<br>
+<b>JsonSchema</b> - list of validation json schema for input data<br>
+<b>Logger</b> - log exceptions<br>
+<b>Responses</b> - list of error responses for api calls<br>
+<b>Routes</b> - list of supported routes<br>
+
+<b>AddCryptoExchangeTest</b> - test api call for adding exchanges<br>
+<b>AddDepositTest</b> - test api call for adding deposit<br>
+<b>UpdateCryptoCurrenciesTest</b> - test api call for modifying crypto currencies<br>
+<b>CreateTradeTest</b> - test api call for creates trades<br>
+<b>GetTradesTest</b> - test api call for getting list of trades<br>
+
+</body>
+</html>
